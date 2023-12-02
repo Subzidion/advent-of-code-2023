@@ -40,18 +40,56 @@ pub fn part2(input: &str) -> u32 {
     for line in input.lines() {
         let mut first = 0;
         let mut second = 0;
-        let mut current_string = "".to_owned();
-        for c in line.chars() {
+
+        // Start the window at the far left
+        let mut start_index = 0;
+        // Set the end of the window
+        let mut end_index;
+
+        if line.len() < 3 {
+            // If the string is short, the window should be the entire string.
+            end_index = line.len() - 1;
+        } else {
+            // Start with the smallest potential number length (one == 3 characters)
+            // This is for strings that start with short numbers.
+            // Otherwise, the algorithm will chop from the left and never see it with a bigger window.
+            end_index = 2;
+        }
+
+        for (i, c) in line.chars().enumerate() {
+            // Only _after_ the first pass-though
+            // Slide the right side of the window by 1, if there's room.
+            if i != 0 && end_index < line.len() {
+                end_index += 1;
+            }
+            // We want to start sliding the window when the end_index is greater than 5,
+            // the maximum window size necessary to find a valid number (seven == 5 characters)
+            if end_index > 5 {
+                start_index += 1;
+            }
+
+            // Along the way, short-circuit if we find any characters.
+            // TODO: We could probably aggressively re-index here after the found digit.
             match c.to_digit(10) {
+                // Valid Digit
                 Some(d) => {
-                    current_string = "".to_owned();
                     if first == 0 {
                         first = d;
                     }
                     second = d;
                 }
+                // Non-digit character
                 None => {
-                    current_string.push(c);
+                    // Get your current window as a slice
+                    let current_string = &line[start_index..end_index];
+
+                    // Because we've shifted the window to the right by one,
+                    // We need to check again that no new number has been created from the entire string
+                    // or that a new smaller number has not appeared.
+                    //
+                    // This is done by checking the entire string and seeing if it's a valid number.
+                    // Then checking for new smaller numbers by dwindling the size of the window.
+                    // TODO: Could probably be aggressive with number lengths here. No need for checking < 3 or > 5.
                     for i in 0..current_string.len() {
                         let check_string = &current_string[i..];
                         match numbers.get(check_string) {
