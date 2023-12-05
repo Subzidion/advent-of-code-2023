@@ -89,27 +89,27 @@ pub fn part1(cards: &[Card]) -> u32 {
 pub fn part2(cards: &[Card]) -> u32 {
     let mut total = 0;
 
-    // Create a queue for the cards
-    let mut queue: Vec<Card> = cards.to_vec();
-
-    while !queue.is_empty() {
-        let card = queue.pop().unwrap();
-        let overlap: u32 = card
-            .winning_numbers
-            .intersection(&card.present_numbers)
-            .count()
-            .try_into()
-            .unwrap();
-
-        if overlap > 0 {
-            for i in card.id..(card.id + overlap) {
-                let index: usize = i.try_into().unwrap();
-                queue.push(cards.get(index).unwrap().clone());
-            }
-        }
-
-        total += 1;
+    for card in cards {
+        total += process_card(card, cards);
     }
 
     total
+}
+
+fn process_card(card: &Card, cards: &[Card]) -> u32 {
+    let mut total = 0;
+
+    let overlap: u32 = card
+        .winning_numbers
+        .intersection(&card.present_numbers)
+        .count()
+        .try_into()
+        .unwrap();
+
+    for i in card.id..(card.id + overlap) {
+        let index: usize = i.try_into().unwrap();
+        total += process_card(&cards[index], cards);
+    }
+
+    total + 1
 }
