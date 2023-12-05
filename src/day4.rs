@@ -3,8 +3,7 @@ use std::collections::HashSet;
 #[derive(Clone)]
 pub struct Card {
     id: u32,
-    winning_numbers: HashSet<u32>,
-    present_numbers: HashSet<u32>,
+    overlap: u32,
 }
 
 #[aoc_generator(day4)]
@@ -53,8 +52,11 @@ pub fn input_generator(input: &str) -> Vec<Card> {
             // Create the Card
             Card {
                 id: card_number,
-                winning_numbers: winning_numbers,
-                present_numbers: present_numbers,
+                overlap: winning_numbers
+                    .intersection(&present_numbers)
+                    .count()
+                    .try_into()
+                    .unwrap(),
             }
         })
         .collect()
@@ -62,51 +64,26 @@ pub fn input_generator(input: &str) -> Vec<Card> {
 
 #[aoc(day4, part1)]
 pub fn part1(cards: &[Card]) -> u32 {
-    let mut total = 0;
     // 2 to the power of the overlap - 1 * 1 is our score for the card.
     // Base is necessary in Rust to do exponents.
     let base: u32 = 2;
 
-    cards.iter().for_each(|card| {
-        // Calculate the intersection of the two sets to get the number of overlaps.
-        let overlap: u32 = card
-            .winning_numbers
-            .intersection(&card.present_numbers)
-            .count()
-            .try_into()
-            .unwrap();
-
-        // Calculate the score of the Card.
-        let score = 1 * base.pow(overlap - 1);
-
-        total += score;
-    });
-
-    total
+    cards
+        .iter()
+        .fold(0, |acc, card| acc + (1 * base.pow(card.overlap - 1)))
 }
 
 #[aoc(day4, part2)]
 pub fn part2(cards: &[Card]) -> u32 {
-    let mut total = 0;
-
-    for card in cards {
-        total += process_card(card, cards);
-    }
-
-    total
+    cards
+        .iter()
+        .fold(0, |acc, card| acc + process_card(card, cards))
 }
 
 fn process_card(card: &Card, cards: &[Card]) -> u32 {
     let mut total = 0;
 
-    let overlap: u32 = card
-        .winning_numbers
-        .intersection(&card.present_numbers)
-        .count()
-        .try_into()
-        .unwrap();
-
-    for i in card.id..(card.id + overlap) {
+    for i in card.id..(card.id + card.overlap) {
         let index: usize = i.try_into().unwrap();
         total += process_card(&cards[index], cards);
     }
