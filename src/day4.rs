@@ -1,5 +1,6 @@
 use std::collections::HashSet;
 
+#[derive(Clone)]
 pub struct Card {
     id: u32,
     winning_numbers: HashSet<u32>,
@@ -80,6 +81,35 @@ pub fn part1(cards: &[Card]) -> u32 {
 
         total += score;
     });
+
+    total
+}
+
+#[aoc(day4, part2)]
+pub fn part2(cards: &[Card]) -> u32 {
+    let mut total = 0;
+
+    // Create a queue for the cards
+    let mut queue: Vec<Card> = cards.to_vec();
+
+    while !queue.is_empty() {
+        let card = queue.pop().unwrap();
+        let overlap: u32 = card
+            .winning_numbers
+            .intersection(&card.present_numbers)
+            .count()
+            .try_into()
+            .unwrap();
+
+        if overlap > 0 {
+            for i in card.id..(card.id + overlap) {
+                let index: usize = i.try_into().unwrap();
+                queue.push(cards.get(index).unwrap().clone());
+            }
+        }
+
+        total += 1;
+    }
 
     total
 }
